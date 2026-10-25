@@ -1,0 +1,27 @@
+{
+  "models": {
+    "providers": {
+      "relay": {
+        "baseUrl": "https://relay.example.com/v1",
+        "api": "openai-completions",
+        "apiKey": "REPLACE_WITH_RELAY_TOKEN",
+        "timeoutSeconds": 300,
+        "models": [
+          {
+            "id": "REPLACE_WITH_MODEL_ID",
+            "name": "Remote Self-Hosted (relay)",
+            "api": "openai-completions",
+            "reasoning": true,
+            "input": ["text"],
+            "contextWindow": 131072,
+            "maxTokens": 8192,
+            "compat": {
+              "supportsUsageInStreaming": true,
+              "supportsTools": true
+            }
+          }
+        ]
+      }
+    }
+  }
+}

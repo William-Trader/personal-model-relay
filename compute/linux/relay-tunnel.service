@@ -1,0 +1,27 @@
+[Unit]
+Description=Personal Model Relay - reverse SSH tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 按实际修改：服务器地址、SSH 用户、密钥、本地推理端口
+Environment=SERVER_HOST=relay.example.com
+Environment=SERVER_USER=relay
+Environment=KEY_PATH=/home/relay/.ssh/relay_ed25519
+Environment=REMOTE_PORT=18092
+Environment=LOCAL_PORT=8091
+ExecStart=/usr/bin/ssh -N -T \
+  -o BatchMode=yes \
+  -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 \
+  -o ServerAliveCountMax=3 \
+  -o StrictHostKeyChecking=accept-new \
+  -i ${KEY_PATH} \
+  -R 127.0.0.1:${REMOTE_PORT}:127.0.0.1:${LOCAL_PORT} \
+  ${SERVER_USER}@${SERVER_HOST}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

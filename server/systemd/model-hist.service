@@ -1,0 +1,22 @@
+[Unit]
+Description=Personal Model Relay - history peak recorder
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=RELAY_UPSTREAM=http://127.0.0.1:18092/api/summary
+Environment=RELAY_HIST_LISTEN=127.0.0.1:18094
+Environment=RELAY_STATE=/var/lib/model-relay/history.json
+ExecStart=/usr/bin/python3 /opt/model-relay/hist.py
+Restart=always
+RestartSec=3
+DynamicUser=no
+StateDirectory=model-relay
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

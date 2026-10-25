@@ -1,0 +1,54 @@
+# 模型远程使用个人中转 · nginx 站点
+# 由 scripts/install-server.sh 渲染；占位符不要手工留空。
+map_hash_bucket_size 256;
+map_hash_max_size 8192;
+
+# token 映射表（600 权限，单独文件，便于轮换）
+include /etc/nginx/.relay-token.conf;
+
+server {
+    listen ${RELAY_PUBLIC_PORT} default_server;
+    server_name _;
+
+    client_max_body_size 64m;
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+    proxy_buffering off;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    # 非 /v1 路径：为状态面板放行（自身不带模型能力）
+    location / {
+        proxy_pass http://127.0.0.1:${RELAY_TUNNEL_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    # 模型接口：必须带 token
+    location /v1/ {
+        if ($relay_key_ok = 0) { return 401; }
+        proxy_pass http://127.0.0.1:${RELAY_TUNNEL_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    # BEGIN panel
+    # 首页：注入「历史最高」面板脚本（需要 proxy_buffering on 才能改写响应体）
+    location = / {
+        proxy_pass http://127.0.0.1:${RELAY_TUNNEL_PORT};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header Accept-Encoding "";
+        proxy_buffering on;
+        sub_filter '</body>' '<script src="/hist/panel.js"></script></body>';
+        sub_filter_once on;
+    }
+
+    location = /hist/max {
+        proxy_pass http://127.0.0.1:${RELAY_HIST_PORT}/max;
+    }
+
+    location = /hist/panel.js {
+        proxy_pass http://127.0.0.1:${RELAY_HIST_PORT}/panel.js;
+    }
+    # END panel
+}
